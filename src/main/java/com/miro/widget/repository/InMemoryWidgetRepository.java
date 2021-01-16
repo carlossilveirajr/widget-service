@@ -14,6 +14,7 @@ import java.util.stream.StreamSupport;
 import org.springframework.stereotype.Component;
 
 import com.miro.widget.model.Widget;
+import com.miro.widget.util.Page;
 
 @Component
 class InMemoryWidgetRepository implements WidgetRepository {
@@ -99,4 +100,16 @@ class InMemoryWidgetRepository implements WidgetRepository {
         zIndexDatabase.clear();
     }
 
+    @Override
+    public List<Widget> findAllOrderedByZIndex(final Page page) {
+        final int start = page.getPage() * page.getSize();
+        final int candidateEnd = start + page.getSize();
+        final int end = Math.max(widgetDatabase.size(), candidateEnd);
+
+        if (end - start <= 0) {
+            return List.of();
+        }
+
+        return findAllOrderedByZIndex().subList(start, end);
+    }
 }

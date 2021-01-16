@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.miro.widget.model.Widget;
 import com.miro.widget.repository.WidgetRepository;
+import com.miro.widget.util.Page;
 
 @Service
 public class WidgetService {
@@ -110,6 +111,11 @@ public class WidgetService {
 
     public List<Widget> findAllOrderByZIndex() {
         return repository.findAllOrderedByZIndex();
+    }
+
+    // Complication 1
+    public List<Widget> findAllOrderByZIndex(final Page page) {
+        return repository.findAllOrderedByZIndex(page);
     }
 
     public static class WidgetNotFoundException extends RuntimeException {
