@@ -111,9 +111,11 @@ public class InMemoryWidgetRepository implements WidgetRepository {
 
     @Override
     public void deleteAll() {
-        widgetById.clear();
-        nextZIndex.set(0);
-        widgetIdByZIndex.clear();
+        synchronized (widgetIdByZIndex) {
+            widgetById.clear();
+            nextZIndex.set(0);
+            widgetIdByZIndex.clear();
+        }
     }
 
     @Override
