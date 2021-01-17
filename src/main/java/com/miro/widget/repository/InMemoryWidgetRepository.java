@@ -28,7 +28,7 @@ import com.miro.widget.util.Page;
  */
 
 @Component
-class InMemoryWidgetRepository implements WidgetRepository {
+public class InMemoryWidgetRepository implements WidgetRepository {
 
     private static final int INITIAL_Z_INDEX_VALUE = 0;
 
@@ -112,6 +112,7 @@ class InMemoryWidgetRepository implements WidgetRepository {
     @Override
     public void deleteAll() {
         widgetById.clear();
+        nextZIndex.set(0);
         widgetIdByZIndex.clear();
     }
 
