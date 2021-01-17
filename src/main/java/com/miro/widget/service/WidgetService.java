@@ -88,14 +88,13 @@ public class WidgetService {
         return doInTransaction(() -> {
             final Set<Widget> widgetsToUpdate = new HashSet<>();
 
-            if (Objects.isNull(zIndex) || zIndex != widget.getZIndex()) {
-                final int newZIndex = getWidgetZIndex(zIndex);
-                widget.setZIndex(newZIndex);
+            if (Objects.isNull(zIndex)) {
+                widget.setZIndex(repository.findNextZIndex());
+            } else if (zIndex != widget.getZIndex()) {
+                widget.setZIndex(zIndex);
 
-                if (Objects.nonNull(zIndex)) {
-                    final Set<Widget> shiftedWidgets = shiftWidgets(newZIndex);
-                    widgetsToUpdate.addAll(shiftedWidgets);
-                }
+                final Set<Widget> shiftedWidgets = shiftWidgets(zIndex);
+                widgetsToUpdate.addAll(shiftedWidgets);
             }
 
             widgetsToUpdate.add(widget);

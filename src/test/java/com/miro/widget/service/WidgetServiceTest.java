@@ -21,6 +21,7 @@ import org.mockito.ArgumentCaptor;
 import com.miro.widget.fixture.WidgetFixture;
 import com.miro.widget.model.Widget;
 import com.miro.widget.repository.WidgetRepository;
+import com.miro.widget.util.Page;
 
 @DisplayName("Widget Service Test")
 class WidgetServiceTest {
@@ -277,7 +278,23 @@ class WidgetServiceTest {
 
         // then
         assertThat(actual).isPresent().hasValue(widget);
-        verify(widgetRepositoryMock).findById(eq(widget.getId()));
+    }
+
+    @Test
+    @DisplayName("findAllOrderByZIndex with Page returns the Widget that fits in one page based on repository result")
+    void findAllOrderByZIndex_shouldReturnsWidgets_whenWidgetsAreFoundInRepository() {
+        // given
+        final var widget1 = WidgetFixture.create(1);
+        final var widget2 = WidgetFixture.create(2);
+        final var page = new Page(0, 5);
+
+        when(widgetRepositoryMock.findAllOrderedByZIndex(page)).thenReturn(List.of(widget1, widget2));
+
+        // when
+        final List<Widget> actual = subject.findAllOrderByZIndex(page);
+
+        // then
+        assertThat(actual).hasSize(2).containsExactly(widget1, widget2);
     }
 
 }
