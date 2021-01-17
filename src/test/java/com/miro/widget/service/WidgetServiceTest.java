@@ -18,8 +18,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
-import com.miro.widget.model.Widget;
 import com.miro.widget.fixture.WidgetFixture;
+import com.miro.widget.model.Widget;
 import com.miro.widget.repository.WidgetRepository;
 
 @DisplayName("Widget Service Test")
@@ -152,7 +152,6 @@ class WidgetServiceTest {
         final Widget actual = subject.updateWidget(widgetId, null, null, null, null, null);
 
         // then
-        verify(widgetRepositoryMock).delete(eq(widgetId));
         verify(widgetRepositoryMock).saveAll(anySet());
 
         final SoftAssertions softAssertions = new SoftAssertions();
@@ -185,7 +184,7 @@ class WidgetServiceTest {
         final Widget actual = subject.updateWidget(widgetId, newCoordinateX, newCoordinateY, zIndex, newWidth, newHeight);
 
         // then
-        verify(widgetRepositoryMock).delete(eq(widgetId));
+
         verify(widgetRepositoryMock).saveAll(anySet());
         
         final SoftAssertions softAssertions = new SoftAssertions();

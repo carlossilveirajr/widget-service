@@ -1,5 +1,6 @@
 package com.miro.widget.repository;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -9,7 +10,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 import org.springframework.stereotype.Component;
 
@@ -61,12 +61,12 @@ class InMemoryWidgetRepository implements WidgetRepository {
     }
 
     @Override
-    public List<Widget> saveAll(final Iterable<Widget> widgets) {
-        final Map<UUID, Widget> widgetsById = StreamSupport.stream(widgets.spliterator(), false)
+    public List<Widget> saveAll(final Collection<Widget> widgets) {
+        final Map<UUID, Widget> widgetsById = widgets.stream()
                 .map(Widget::new)
                 .peek(Widget::updateLastModificationDate)
                 .collect(Collectors.toMap(Widget::getId, Function.identity()));
-        final Map<Integer, UUID> idByZIndex = StreamSupport.stream(widgets.spliterator(), false)
+        final Map<Integer, UUID> idByZIndex = widgets.stream()
                 .collect(Collectors.toMap(Widget::getZIndex, Widget::getId));
 
         final Set<UUID> keysToUpdate = widgetsById.keySet();
@@ -89,9 +89,11 @@ class InMemoryWidgetRepository implements WidgetRepository {
 
     @Override
     public void delete(final UUID id) {
-        Optional.ofNullable(widgetDatabase.remove(id))
-                .map(Widget::getZIndex)
-                .ifPresent(zIndexDatabase::remove);
+        synchronized (zIndexDatabase) {
+            Optional.ofNullable(widgetDatabase.remove(id))
+                    .map(Widget::getZIndex)
+                    .ifPresent(zIndexDatabase::remove);
+        }
     }
 
     @Override

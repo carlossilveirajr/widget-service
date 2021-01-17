@@ -1,5 +1,6 @@
 package com.miro.widget.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,7 +18,7 @@ public interface WidgetRepository {
 
     int findNextZIndex();
 
-    List<Widget> saveAll(Iterable<Widget> widgets);
+    List<Widget> saveAll(Collection<Widget> widgets);
 
     void delete(UUID id);
 

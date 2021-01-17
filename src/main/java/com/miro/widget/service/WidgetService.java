@@ -2,6 +2,7 @@ package com.miro.widget.service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -85,14 +86,20 @@ public class WidgetService {
         Optional.ofNullable(height).ifPresent(widget::setHeight);
 
         return doInTransaction(() -> {
-            widget.setZIndex(getWidgetZIndex(zIndex));
+            final Set<Widget> widgetsToUpdate = new HashSet<>();
 
-            repository.delete(widget.getId());
+            if (Objects.isNull(zIndex) || zIndex != widget.getZIndex()) {
+                final int newZIndex = getWidgetZIndex(zIndex);
+                widget.setZIndex(newZIndex);
 
-            final Set<Widget> widgets = shiftWidgets(widget.getZIndex());
-            widgets.add(widget);
+                if (Objects.nonNull(zIndex)) {
+                    final Set<Widget> shiftedWidgets = shiftWidgets(newZIndex);
+                    widgetsToUpdate.addAll(shiftedWidgets);
+                }
+            }
 
-            repository.saveAll(widgets);
+            widgetsToUpdate.add(widget);
+            repository.saveAll(widgetsToUpdate);
 
             return widget;
         });
