@@ -15,6 +15,15 @@ import com.miro.widget.model.Widget;
 import com.miro.widget.repository.WidgetRepository;
 import com.miro.widget.util.Page;
 
+/**
+ * Widget Service handles operations with Widgets such as creation, update, search, and deletion.
+ *
+ * In this service, the Widgets shift logic is implemented when Z-index collision is detected.
+ *  That way, all the time the widgets are saved in the repository the correct information is sent
+ *  avoiding the need for unicity checking in the data storage. Operations that demand shift
+ *  (creation and update) are done in a serial way.
+ */
+
 @Service
 public class WidgetService {
 
@@ -32,7 +41,8 @@ public class WidgetService {
             final int height
     ) {
         return doInTransaction(() -> {
-            final int widgetZIndex = Optional.ofNullable(zIndex).orElseGet(repository::findNextZIndex);
+            final int widgetZIndex = Optional.ofNullable(zIndex)
+                    .orElseGet(repository::findNextZIndex);
             final var widget = Widget.builder()
                     .setId(UUID.randomUUID())
                     .setCoordinateX(coordinateX)
@@ -81,7 +91,8 @@ public class WidgetService {
             final Integer width,
             final Integer height
     ) {
-        final Widget widget = repository.findById(widgetId).orElseThrow(() -> new WidgetNotFoundException(widgetId));
+        final Widget widget = repository.findById(widgetId)
+                .orElseThrow(() -> new WidgetNotFoundException(widgetId));
 
         final Widget.WidgetBuilder widgetBuilder = widget.toBuilder();
         Optional.ofNullable(coordinateX).ifPresent(widgetBuilder::setCoordinateX);

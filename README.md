@@ -18,15 +18,11 @@ When a Widget is inserted and updated, if the Z-index is conflicting with other 
 
   - That exceptional behavior for the z-index field feels strange but is necessary due to the requirements does not say that the update will be done with the whole entity in the request. It only expects the updated item in the response. Anyway, this is a possible improvement point: by making for the update mandatory to have all the fields.
 
-- When there is no Widget, the max Z-Index from the database will be the minimum possible integer. I.e., the first "layer" of z-index is used. 
-
 - The Widget shift, which happens when there is a z-index conflict, bring Widget by Widget from the database incrementing the z-index search. It is done like that to find the very first gap o z-index. It was also possible to bring N Widget which time, but it would be hard to find a good N value.
 
 - The InMemoryRepository handles two Maps, both thread-safe, one collection handles the entity (Widget) and its id, and the second collection works as an index for the Z-index.
 
 - The synchronization is done based on the index (z-index collection) because it is that last updated collection. That way, read from the Widget collection is possible and will not generate inconsistency.
-
-- To be closed to a database approach, the InMemoryRepository always saves and retrieves copies of the database.
 
 - The widget service does the creation and update in a synchronous block to avoid concurrency issues. To implement that, a command-like approach is used where a sync block is used to execute either creation or update.
 

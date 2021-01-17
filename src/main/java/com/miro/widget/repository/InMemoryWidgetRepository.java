@@ -17,6 +17,16 @@ import org.springframework.stereotype.Component;
 import com.miro.widget.model.Widget;
 import com.miro.widget.util.Page;
 
+/**
+ * InMemoryWidgetRepository stores the widget in a memory.
+ *
+ * Two collections are used: widgetById is the main one and the first to be updated,
+ *  the search operations that use only this collection can be done parallel.
+ *  widgetIdByZIndex is the auxiliary collection that works as an index, it is the
+ *  second to be updated, that way, it is necessary to synchronize all the operations
+ *  that use that collection.
+ */
+
 @Component
 class InMemoryWidgetRepository implements WidgetRepository {
 
