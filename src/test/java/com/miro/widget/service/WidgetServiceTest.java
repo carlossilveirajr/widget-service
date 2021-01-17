@@ -286,7 +286,7 @@ class WidgetServiceTest {
         // given
         final var widget1 = WidgetFixture.create(1);
         final var widget2 = WidgetFixture.create(2);
-        final var page = new Page(0, 5);
+        final var page = Page.from(0, 5);
 
         when(widgetRepositoryMock.findAllOrderedByZIndex(page)).thenReturn(List.of(widget1, widget2));
 

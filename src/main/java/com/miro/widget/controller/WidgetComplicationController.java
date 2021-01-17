@@ -27,13 +27,13 @@ public class WidgetComplicationController {
     }
 
     // complication 1
-    @GetMapping(path = "/v2")
+    @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<WidgetDTO> getPagedWidget(
             @RequestParam(value = "page", defaultValue = "0") final int page,
             @RequestParam(value = "size", defaultValue = "10") final int size
     ) {
-        return widgetService.findAllOrderByZIndex(new Page(page, size)).stream()
+        return widgetService.findAllOrderByZIndex(Page.from(page, size)).stream()
                 .map(WidgetDTO::from)
                 .collect(Collectors.toUnmodifiableList());
     }

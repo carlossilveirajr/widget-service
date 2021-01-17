@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import com.miro.widget.model.Widget;
 import com.miro.widget.fixture.WidgetFixture;
+import com.miro.widget.util.Page;
 
 @DisplayName("In Memory Widget Repository Test")
 class InMemoryWidgetRepositoryTest {
@@ -227,4 +228,59 @@ class InMemoryWidgetRepositoryTest {
         assertThat(subject.findById(widget2.getId())).isEmpty();
     }
 
+    @Test
+    @DisplayName("findAllOrderedByZIndex returns a full first page restricted to the size of the page when there is more widgets")
+    void findAllOrderedByZIndex_shouldGetFirstPage_whenRepositoryHasWidgets() {
+        // given
+        final var widget1 = WidgetFixture.create(1);
+        final var widget2 = WidgetFixture.create(2);
+        final var widget3 = WidgetFixture.create(3);
+        subject.saveAll(Set.of(widget1, widget2, widget3));
+
+        final Page page = Page.from(0, 2);
+
+        // when
+        final List<Widget> actual = subject.findAllOrderedByZIndex(page);
+
+        // then
+        assertThat(actual).containsExactly(widget1, widget2);
+        assertThat(actual).doesNotContain(widget3);
+    }
+
+    @Test
+    @DisplayName("findAllOrderedByZIndex returns second page items when it still having widgets")
+    void findAllOrderedByZIndex_shouldGetSecondPage_whenItHasSecondPage() {
+        // given
+        final var widget1 = WidgetFixture.create(1);
+        final var widget2 = WidgetFixture.create(2);
+        final var widget3 = WidgetFixture.create(3);
+        subject.saveAll(Set.of(widget1, widget2, widget3));
+
+        final Page page = Page.from(1, 2);
+
+        // when
+        final List<Widget> actual = subject.findAllOrderedByZIndex(page);
+
+        // then
+        assertThat(actual).doesNotContain(widget1, widget2);
+        assertThat(actual).containsExactly(widget3);
+    }
+
+    @Test
+    @DisplayName("findAllOrderedByZIndex returns empty list when page has no widget")
+    void findAllOrderedByZIndex_shouldReturnEmpty_whenThereIsNotWidgetInSecondPage() {
+        // given
+        final var widget1 = WidgetFixture.create(1);
+        final var widget2 = WidgetFixture.create(2);
+        final var widget3 = WidgetFixture.create(3);
+        subject.saveAll(Set.of(widget1, widget2, widget3));
+
+        final Page page = Page.from(1, 5);
+
+        // when
+        final List<Widget> actual = subject.findAllOrderedByZIndex(page);
+
+        // then
+        assertThat(actual).isEmpty();
+    }
 }

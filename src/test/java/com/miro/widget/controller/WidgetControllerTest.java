@@ -30,7 +30,7 @@ import io.restassured.module.mockmvc.RestAssuredMockMvc;
 
 @WebMvcTest(controllers = {WidgetController.class})
 @DisplayName("Widget Controller Test")
-public class WidgetControllerTest {
+class WidgetControllerTest {
 
     @MockBean
     private WidgetService widgetServiceMock;

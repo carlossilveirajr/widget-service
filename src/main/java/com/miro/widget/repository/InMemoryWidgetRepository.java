@@ -119,7 +119,7 @@ class InMemoryWidgetRepository implements WidgetRepository {
     public List<Widget> findAllOrderedByZIndex(final Page page) {
         final int start = page.getPage() * page.getSize();
         final int candidateEnd = start + page.getSize();
-        final int end = Math.max(widgetById.size(), candidateEnd);
+        final int end = Math.min(widgetById.size(), candidateEnd);
 
         if (end - start <= 0) {
             return List.of();

@@ -19,7 +19,7 @@ class PageTest {
         final int page = 0;
 
         // when
-        final Page actual = new Page(page, size);
+        final Page actual = Page.from(page, size);
 
         // then
         assertThat(actual.getSize()).isEqualTo(size);
@@ -33,7 +33,7 @@ class PageTest {
     void newPage_shouldThrowException_whenParametersAreInvalid(final int size, final int page) {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> new Page(page, size)
+                () -> Page.from(page, size)
         );
     }
 }
