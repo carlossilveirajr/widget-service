@@ -16,7 +16,9 @@ When a Widget is inserted and updated, if the Z-index is conflicting with other 
 
 - The update is done via PUT because the requirements showed that the whole Widget is sent. In case a field is null, that field will not be considered except Z-Index. If the Z-Index is null it means the max Z-Index should be used.
 
-- When there is no Widget, the max Z-Index from the database will be the minimum possible integer. I.e., the first "layer" of z-index is used.
+  - That exceptional behavior for the z-index field feels strange but is necessary due to the requirements does not say that the update will be done with the whole entity in the request. It only expects the updated item in the response. Anyway, this is a possible improvement point: by making for the update mandatory to have all the fields.
+
+- When there is no Widget, the max Z-Index from the database will be the minimum possible integer. I.e., the first "layer" of z-index is used. 
 
 - The Widget shift, which happens when there is a z-index conflict, bring Widget by Widget from the database incrementing the z-index search. It is done like that to find the very first gap o z-index. It was also possible to bring N Widget which time, but it would be hard to find a good N value.
 
