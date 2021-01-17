@@ -32,8 +32,15 @@ public class WidgetService {
             final int height
     ) {
         return doInTransaction(() -> {
-            final int widgetZIndex = getWidgetZIndex(zIndex);
-            final var widget = new Widget(coordinateX, coordinateY, widgetZIndex, width, height);
+            final int widgetZIndex = Optional.ofNullable(zIndex).orElseGet(repository::findNextZIndex);
+            final var widget = Widget.builder()
+                    .setId(UUID.randomUUID())
+                    .setCoordinateX(coordinateX)
+                    .setCoordinateY(coordinateY)
+                    .setZIndex(widgetZIndex)
+                    .setWidth(width)
+                    .setHeight(height)
+                    .build();
 
             final Set<Widget> widgets = shiftWidgets(widgetZIndex);
             widgets.add(widget);
@@ -48,10 +55,6 @@ public class WidgetService {
         return function.get();
     }
 
-    private Integer getWidgetZIndex(final Integer zIndex) {
-        return Optional.ofNullable(zIndex).orElseGet(repository::findNextZIndex);
-    }
-
     private Set<Widget> shiftWidgets(final int widgetZIndex) {
         final Set<Widget> shiftedWidget = new HashSet<>();
 
@@ -61,10 +64,10 @@ public class WidgetService {
 
         do {
             widget = repository.findByZIndex(index.get());
-            widget.ifPresent(w -> {
-                w.setZIndex(index.incrementAndGet());
-                shiftedWidget.add(w);
-            });
+            widget.map(w -> w.toBuilder()
+                    .setZIndex(index.incrementAndGet())
+                    .build()
+            ).ifPresent(shiftedWidget::add);
         } while (widget.isPresent());
 
         return shiftedWidget;
@@ -78,29 +81,32 @@ public class WidgetService {
             final Integer width,
             final Integer height
     ) {
-        final Widget widget = repository.findById(widgetId)
-                .orElseThrow(() -> new WidgetNotFoundException(widgetId));
-        Optional.ofNullable(coordinateX).ifPresent(widget::setCoordinateX);
-        Optional.ofNullable(coordinateY).ifPresent(widget::setCoordinateY);
-        Optional.ofNullable(width).ifPresent(widget::setWidth);
-        Optional.ofNullable(height).ifPresent(widget::setHeight);
+        final Widget widget = repository.findById(widgetId).orElseThrow(() -> new WidgetNotFoundException(widgetId));
+
+        final Widget.WidgetBuilder widgetBuilder = widget.toBuilder();
+        Optional.ofNullable(coordinateX).ifPresent(widgetBuilder::setCoordinateX);
+        Optional.ofNullable(coordinateY).ifPresent(widgetBuilder::setCoordinateY);
+        Optional.ofNullable(width).ifPresent(widgetBuilder::setWidth);
+        Optional.ofNullable(height).ifPresent(widgetBuilder::setHeight);
 
         return doInTransaction(() -> {
             final Set<Widget> widgetsToUpdate = new HashSet<>();
 
             if (Objects.isNull(zIndex)) {
-                widget.setZIndex(repository.findNextZIndex());
+                widgetBuilder.setZIndex(repository.findNextZIndex());
             } else if (zIndex != widget.getZIndex()) {
-                widget.setZIndex(zIndex);
+                widgetBuilder.setZIndex(zIndex);
 
                 final Set<Widget> shiftedWidgets = shiftWidgets(zIndex);
                 widgetsToUpdate.addAll(shiftedWidgets);
             }
 
-            widgetsToUpdate.add(widget);
+            final Widget updatedWidget = widgetBuilder.build();
+
+            widgetsToUpdate.add(updatedWidget);
             repository.saveAll(widgetsToUpdate);
 
-            return widget;
+            return updatedWidget;
         });
     }
 

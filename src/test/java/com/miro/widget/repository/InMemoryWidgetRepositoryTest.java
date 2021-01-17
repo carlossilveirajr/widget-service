@@ -121,13 +121,13 @@ class InMemoryWidgetRepositoryTest {
     }
 
     @Test
-    @DisplayName("findNextZIndex returns the minimum integer when there is not widget stored")
-    void findNextZIndex_shouldReturnsMinInteger_whenNoWidgetIsStored() {
+    @DisplayName("findNextZIndex returns the zero when there is not widget stored")
+    void findNextZIndex_shouldReturnsZero_whenNoWidgetIsStored() {
         // when
         final int actual = subject.findNextZIndex();
 
         // then
-        assertThat(actual).isEqualTo(Integer.MIN_VALUE);
+        assertThat(actual).isEqualTo(0);
     }
 
     @Test
@@ -169,7 +169,7 @@ class InMemoryWidgetRepositoryTest {
         softAssertions.assertThat(actual.getZIndex()).isEqualTo(expected.getZIndex());
         softAssertions.assertThat(actual.getWidth()).isEqualTo(expected.getWidth());
         softAssertions.assertThat(actual.getHeight()).isEqualTo(expected.getHeight());
-        softAssertions.assertThat(actual.getLastModificationDate()).isAfter(expected.getLastModificationDate());
+        softAssertions.assertThat(actual.getLastModificationDate()).isEqualTo(expected.getLastModificationDate());
         softAssertions.assertAll();
     }
 
@@ -182,14 +182,15 @@ class InMemoryWidgetRepositoryTest {
         subject.saveAll(Set.of(widget1, widget2));
 
         final var widget3 = WidgetFixture.create(3);
-        widget2.setZIndex(4);
+
+        final var widget = widget2.toBuilder().setZIndex(4).build();
 
         // when
-        final List<Widget> actual = subject.saveAll(Set.of(widget2, widget3));
+        final List<Widget> actual = subject.saveAll(Set.of(widget, widget3));
 
         // then
         assertSavedWidget(actual.get(0), widget3);
-        assertSavedWidget(actual.get(1), widget2);
+        assertSavedWidget(actual.get(1), widget);
     }
 
     @Test

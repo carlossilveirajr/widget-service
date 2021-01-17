@@ -6,47 +6,32 @@ import java.time.ZonedDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
-public class Widget {
+/**
+ * This object represents a Widget.
+ *
+ * This object is immutable to ensure thread-safe of writing and update Widget in
+ *  the widget-service. In case you need to change any field a new instance should
+ *  be created using the builder pattern.
+ */
+
+public final class Widget {
 
     private final UUID id;
 
-    private ZonedDateTime lastModificationDate;
+    private final ZonedDateTime lastModificationDate;
 
-    private int coordinateX;
+    private final int coordinateX;
 
-    private int coordinateY;
+    private final int coordinateY;
 
-    private int zIndex;
+    private final int zIndex;
 
-    private int width;
+    private final int width;
 
-    private int height;
+    private final int height;
 
-    public Widget(final Widget widget) {
-        this(
-                widget.getId(),
-                widget.getLastModificationDate(),
-                widget.getCoordinateX(),
-                widget.getCoordinateY(),
-                widget.getZIndex(),
-                widget.getWidth(),
-                widget.getHeight()
-        );
-    }
-
-    public Widget(
-            final int coordinateX,
-            final int coordinateY,
-            final int zIndex,
-            final int width,
-            final int height
-    ) {
-        this(UUID.randomUUID(), ZonedDateTime.now(), coordinateX, coordinateY, zIndex, width, height);
-    }
-
-    public Widget(
+    private Widget(
             final UUID id,
-            final ZonedDateTime lastModificationDate,
             final int coordinateX,
             final int coordinateY,
             final int zIndex,
@@ -54,13 +39,16 @@ public class Widget {
             final int height
     ) {
         this.id = Objects.requireNonNull(id);
-        this.lastModificationDate = Objects.requireNonNull(lastModificationDate);
+        this.lastModificationDate = ZonedDateTime.now();
 
         this.coordinateX = coordinateX;
         this.coordinateY = coordinateY;
         this.zIndex = zIndex;
-        setWidth(width);
-        setHeight(height);
+
+        checkArgument(width > 0, "Width must be positive");
+        checkArgument(height > 0, "Height must be positive");
+        this.width = width;
+        this.height = height;
     }
 
     public UUID getId() {
@@ -91,32 +79,6 @@ public class Widget {
         return height;
     }
 
-    public void setCoordinateX(final int coordinateX) {
-        this.coordinateX = coordinateX;
-    }
-
-    public void setCoordinateY(final int coordinateY) {
-        this.coordinateY = coordinateY;
-    }
-
-    public void setZIndex(final int zIndex) {
-        this.zIndex = zIndex;
-    }
-
-    public void setWidth(final int width) {
-        checkArgument(width > 0, "Width must be positive");
-        this.width = width;
-    }
-
-    public void setHeight(final int height) {
-        checkArgument(height > 0, "Height must be positive");
-        this.height = height;
-    }
-
-    public void updateLastModificationDate() {
-        this.lastModificationDate = ZonedDateTime.now();
-    }
-
     @Override
     public boolean equals(final Object o) {
         if (this == o)
@@ -124,17 +86,70 @@ public class Widget {
         if (o == null || getClass() != o.getClass())
             return false;
         final Widget widget = (Widget) o;
-        return coordinateX == widget.coordinateX &&
-                coordinateY == widget.coordinateY &&
-                zIndex == widget.zIndex &&
-                width == widget.width &&
-                height == widget.height &&
-                id.equals(widget.id);
+        return id.equals(widget.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, coordinateX, coordinateY, zIndex, width, height);
+        return Objects.hash(id);
+    }
+
+    public WidgetBuilder toBuilder() {
+        return new WidgetBuilder()
+                .setId(id)
+                .setCoordinateX(coordinateX)
+                .setCoordinateY(coordinateY)
+                .setZIndex(zIndex)
+                .setHeight(height)
+                .setWidth(width);
+    }
+
+    public static WidgetBuilder builder() {
+        return new WidgetBuilder();
+    }
+
+    public static class WidgetBuilder {
+        private UUID id;
+        private Integer coordinateX;
+        private Integer coordinateY;
+        private Integer zIndex;
+        private Integer width;
+        private Integer height;
+
+        public WidgetBuilder setId(final UUID id) {
+            this.id = id;
+            return this;
+        }
+
+        public WidgetBuilder setCoordinateX(final int coordinateX) {
+            this.coordinateX = coordinateX;
+            return this;
+        }
+
+        public WidgetBuilder setCoordinateY(final int coordinateY) {
+            this.coordinateY = coordinateY;
+            return this;
+        }
+
+        public WidgetBuilder setZIndex(final int zIndex) {
+            this.zIndex = zIndex;
+            return this;
+        }
+
+        public WidgetBuilder setWidth(final int width) {
+            this.width = width;
+            return this;
+        }
+
+        public WidgetBuilder setHeight(final int height) {
+            this.height = height;
+            return this;
+        }
+
+        public Widget build() {
+            return new Widget(id, coordinateX, coordinateY, zIndex, width, height);
+        }
+
     }
 
 }

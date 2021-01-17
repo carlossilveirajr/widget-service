@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -19,94 +20,96 @@ import com.miro.widget.util.Page;
 @Component
 class InMemoryWidgetRepository implements WidgetRepository {
 
-    private final Map<UUID, Widget> widgetDatabase;
-    private final Map<Integer, UUID> zIndexDatabase;
+    private static final int INITIAL_Z_INDEX_VALUE = 0;
+
+    private final Map<UUID, Widget> widgetById;
+    private final Map<Integer, UUID> widgetIdByZIndex;
+    private final AtomicInteger nextZIndex;
 
     public InMemoryWidgetRepository() {
-        widgetDatabase = new ConcurrentHashMap<>();
-        zIndexDatabase = new ConcurrentHashMap<>();
+        widgetById = new ConcurrentHashMap<>();
+        widgetIdByZIndex = new ConcurrentHashMap<>();
+        nextZIndex = new AtomicInteger(INITIAL_Z_INDEX_VALUE);
     }
 
     @Override
     public Optional<Widget> findById(final UUID id) {
-        return Optional.ofNullable(widgetDatabase.get(id))
-                .map(Widget::new);
+        return Optional.ofNullable(widgetById.get(id));
     }
 
     @Override
     public List<Widget> findAllOrderedByZIndex() {
-        return widgetDatabase.values().stream()
+        return widgetById.values().stream()
                 .sorted(Comparator.comparingInt(Widget::getZIndex))
-                .map(Widget::new)
                 .collect(Collectors.toList());
     }
 
     @Override
     public Optional<Widget> findByZIndex(final int zIndex) {
-        synchronized (zIndexDatabase) {
-            return Optional.ofNullable(zIndexDatabase.get(zIndex))
-                    .map(widgetDatabase::get)
-                    .map(Widget::new);
+        synchronized (widgetIdByZIndex) {
+            return Optional.ofNullable(widgetIdByZIndex.get(zIndex))
+                    .map(widgetById::get);
         }
     }
 
     @Override
     public int findNextZIndex() {
-        synchronized (zIndexDatabase) {
-            return zIndexDatabase.keySet().stream()
-                    .max(Comparator.naturalOrder())
-                    .map(i -> i + 1)
-                    .orElse(Integer.MIN_VALUE);
+        synchronized (widgetIdByZIndex) {
+            return nextZIndex.getAndIncrement();
         }
     }
 
     @Override
     public List<Widget> saveAll(final Collection<Widget> widgets) {
-        final Map<UUID, Widget> widgetsById = widgets.stream()
-                .map(Widget::new)
-                .peek(Widget::updateLastModificationDate)
+        final Map<UUID, Widget> widgetById = widgets.stream()
                 .collect(Collectors.toMap(Widget::getId, Function.identity()));
         final Map<Integer, UUID> idByZIndex = widgets.stream()
                 .collect(Collectors.toMap(Widget::getZIndex, Widget::getId));
 
-        final Set<UUID> keysToUpdate = widgetsById.keySet();
-        final Set<Integer> toRemove = zIndexDatabase.entrySet().stream()
+        final Set<UUID> keysToUpdate = widgetById.keySet();
+        final Set<Integer> toRemove = widgetIdByZIndex.entrySet().stream()
                 .filter(e -> keysToUpdate.contains(e.getValue()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toUnmodifiableSet());
 
-        synchronized (zIndexDatabase) {
-            widgetDatabase.putAll(widgetsById);
-            toRemove.forEach(zIndexDatabase::remove);
-            zIndexDatabase.putAll(idByZIndex);
+        final int maxInsertedZIndex = idByZIndex.keySet().stream()
+                .max(Integer::compareTo)
+                .orElse(0);
+
+        synchronized (widgetIdByZIndex) {
+            this.widgetById.putAll(widgetById);
+
+            nextZIndex.set(Math.max(nextZIndex.get(), maxInsertedZIndex + 1));
+
+            toRemove.forEach(widgetIdByZIndex::remove);
+            widgetIdByZIndex.putAll(idByZIndex);
         }
 
-        return widgetsById.values().stream()
-                .map(Widget::new)
+        return widgetById.values().stream()
                 .sorted(Comparator.comparingInt(Widget::getZIndex))
                 .collect(Collectors.toList());
     }
 
     @Override
     public void delete(final UUID id) {
-        synchronized (zIndexDatabase) {
-            Optional.ofNullable(widgetDatabase.remove(id))
+        synchronized (widgetIdByZIndex) {
+            Optional.ofNullable(widgetById.remove(id))
                     .map(Widget::getZIndex)
-                    .ifPresent(zIndexDatabase::remove);
+                    .ifPresent(widgetIdByZIndex::remove);
         }
     }
 
     @Override
     public void deleteAll() {
-        widgetDatabase.clear();
-        zIndexDatabase.clear();
+        widgetById.clear();
+        widgetIdByZIndex.clear();
     }
 
     @Override
     public List<Widget> findAllOrderedByZIndex(final Page page) {
         final int start = page.getPage() * page.getSize();
         final int candidateEnd = start + page.getSize();
-        final int end = Math.max(widgetDatabase.size(), candidateEnd);
+        final int end = Math.max(widgetById.size(), candidateEnd);
 
         if (end - start <= 0) {
             return List.of();

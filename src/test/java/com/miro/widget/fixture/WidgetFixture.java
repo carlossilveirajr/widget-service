@@ -1,5 +1,7 @@
 package com.miro.widget.fixture;
 
+import java.util.UUID;
+
 import com.miro.widget.model.Widget;
 
 public class WidgetFixture {
@@ -11,7 +13,14 @@ public class WidgetFixture {
     }
 
     public static Widget create(final int zIndex) {
-        return new Widget(1, 2, zIndex, 4, 5);
+        return Widget.builder()
+                .setId(UUID.randomUUID())
+                .setCoordinateX(1)
+                .setCoordinateY(2)
+                .setZIndex(zIndex)
+                .setWidth(4)
+                .setHeight(5)
+                .build();
     }
 
 }
